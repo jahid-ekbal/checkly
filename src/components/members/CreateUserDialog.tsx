@@ -36,7 +36,13 @@ const CreateUserDialog = () => {
     formState: { isSubmitting },
   } = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { name: "", email: "", password: "", role: "member" },
+    defaultValues: {
+      name: "",
+      username: "",
+      email: "",
+      password: "",
+      role: "member",
+    },
     mode: "all",
   });
 
@@ -73,6 +79,24 @@ const CreateUserDialog = () => {
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  autoComplete="off"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+          <Controller
+            name="username"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Username</FieldLabel>
                 <Input
                   {...field}
                   id={field.name}

@@ -27,16 +27,28 @@ export const createUserAction = async (
     return { error: MESSAGE };
   }
 
-  const { name, email, password, role } = parsed.data;
+  const { name, username, email, password, role } = parsed.data;
 
   try {
-    await auth.api.createUser({
+    const created = await auth.api.createUser({
       body: { name, email, password, role },
       headers: await headers(),
     });
+    await prisma.user.update({
+      where: { id: created.user.id },
+      data: { username },
+    });
     revalidatePath("/members");
     return { success: true };
-  } catch {
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      return { error: "Email or username already exists" };
+    }
     return { error: MESSAGE };
   }
 };

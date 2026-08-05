@@ -10,9 +10,21 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "sqlite" }),
   secret: serverEnv.BETTER_AUTH_SECRET,
   baseURL: serverEnv.BETTER_AUTH_URL,
+  trustedOrigins: serverEnv.BETTER_AUTH_ALLOWED_ORIGINS?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  user: {
+    additionalFields: {
+      username: {
+        type: "string",
+        unique: true,
+        required: false,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
-    disableSignUp: true,
+    disableSignUp: false,
   },
   plugins: [
     admin({

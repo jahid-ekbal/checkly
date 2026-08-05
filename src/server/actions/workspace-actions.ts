@@ -22,11 +22,15 @@ export const updateWorkspaceAction = async (
 
   const { name, description } = parsed.data;
 
-  await prisma.workspace.update({
-    where: { id: WORKSPACE_ID },
-    data: { name, description },
-  });
-
-  revalidatePath("/settings");
-  return { success: true };
+  try {
+    await prisma.workspace.update({
+      where: { id: WORKSPACE_ID },
+      data: { name, description },
+    });
+    revalidatePath("/settings");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch {
+    return { error: "Something went wrong" };
+  }
 };

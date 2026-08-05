@@ -1,49 +1,54 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircleIcon } from "lucide-react";
-import { signInSchema } from "@/lib/zodSchema";
+import { changePasswordSchema } from "@/lib/zodSchema";
 import { authClient } from "@/lib/auth/auth-client";
+import { toast } from "@/components/shadcnui/toast";
 import { Button } from "@/components/shadcnui/button";
 import { Input } from "@/components/shadcnui/input";
-import { Checkbox } from "@/components/shadcnui/checkbox";
 import { Field, FieldError, FieldLabel } from "@/components/shadcnui/field";
 
-const SignInForm = () => {
-  const router = useRouter();
+const ChangePasswordForm = () => {
   const [error, setError] = useState<string | null>(null);
 
   const {
     handleSubmit,
     control,
+    reset,
     formState: { isSubmitting },
   } = useForm({
-    resolver: zodResolver(signInSchema),
-    defaultValues: { email: "", password: "", rememberMe: true },
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
     mode: "all",
   });
 
   const onSubmit = async (values: {
-    email: string;
-    password: string;
-    rememberMe: boolean;
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
   }) => {
     setError(null);
-    const { error } = await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
-      rememberMe: values.rememberMe,
+    const { error } = await authClient.changePassword({
+      currentPassword: values.currentPassword,
+      newPassword: values.newPassword,
+      revokeOtherSessions: true,
     });
     if (error) {
-      setError(error.message ?? "Invalid credentials");
+      setError(error.message ?? "Could not change password");
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+    reset();
+    toast.add({
+      title: "Password changed",
+      description: "Other sessions have been signed out.",
+    });
   };
 
   return (
@@ -52,34 +57,15 @@ const SignInForm = () => {
       noValidate
       className="space-y-4">
       <Controller
-        name="email"
+        name="currentPassword"
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-            <Input
-              {...field}
-              id={field.name}
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
-        name="password"
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Current password</FieldLabel>
             <Input
               {...field}
               id={field.name}
               type="password"
-              placeholder="••••••••"
               autoComplete="current-password"
               aria-invalid={fieldState.invalid}
             />
@@ -88,18 +74,37 @@ const SignInForm = () => {
         )}
       />
       <Controller
-        name="rememberMe"
+        name="newPassword"
         control={control}
-        render={({ field }) => (
-          <label className="flex w-fit cursor-pointer items-center gap-2 text-sm">
-            <Checkbox
-              checked={field.value}
-              onCheckedChange={field.onChange}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>New password</FieldLabel>
+            <Input
+              {...field}
+              id={field.name}
+              type="password"
+              autoComplete="new-password"
+              aria-invalid={fieldState.invalid}
             />
-            <span className="text-muted-foreground select-none">
-              Remember me
-            </span>
-          </label>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="confirmPassword"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Confirm new password</FieldLabel>
+            <Input
+              {...field}
+              id={field.name}
+              type="password"
+              autoComplete="new-password"
+              aria-invalid={fieldState.invalid}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
         )}
       />
       {error && (
@@ -111,21 +116,13 @@ const SignInForm = () => {
       )}
       <Button
         type="submit"
-        className="w-full"
+        variant="outline"
         disabled={isSubmitting}>
         {isSubmitting && <LoaderCircleIcon className="animate-spin" />}
-        {isSubmitting ? "Signing in..." : "Sign in"}
+        {isSubmitting ? "Changing..." : "Change password"}
       </Button>
-      <p className="text-muted-foreground text-center text-sm">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/sign-up"
-          className="text-primary font-medium underline-offset-4 hover:underline">
-          Create one
-        </Link>
-      </p>
     </form>
   );
 };
 
-export default SignInForm;
+export default ChangePasswordForm;
