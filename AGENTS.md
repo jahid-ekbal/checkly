@@ -64,6 +64,14 @@ public/uploads/     # User uploads (all files ignored except .gitkeep)
 - **ESLint**: Locked at eslint@9.x until `eslint-plugin-react` ships v10 support. Do NOT bump.
 - **TypeScript**: Currently ^5.9. TS 7.0 (Go-native compiler) blocked until typescript-eslint API stabilizes (~Oct 2026). Do not migrate.
 
+## Auth (Better Auth) gotchas
+
+- **Next 16**: no `middleware.ts` — use `src/proxy.ts` (`proxy` export). Cookie-only check there; full session check in pages/actions via `auth.api.getSession`.
+- **Prisma 7**: import client from `@generated/prisma/client` (custom output), adapter `prismaAdapter(prisma, { provider: "sqlite" })` from `@better-auth/prisma-adapter`. Auth instance: `src/lib/auth/index.ts`, client: `src/lib/auth/auth-client.ts`, roles/AC: `src/lib/auth/permissions.ts`.
+- Schema regeneration: `bun x auth@latest generate --adapter prisma --dialect sqlite -y` (overwrites `schema.prisma`; re-add custom models after). Migrations via `prisma migrate dev` (CLI migrate unsupported for Prisma).
+- Roles: 4 custom AC roles (owner/admin/member/viewer) in `permissions.ts`. Signup disabled (`disableSignUp: true`), users created via `auth.api.createUser` (admin plugin). Owner seeded via `bun run db:seed` (needs `OWNER_EMAIL/PASSWORD/NAME` env).
+- Base UI `Select` `onValueChange` passes `string | null` — guard with `if (value)` before RHF `field.onChange`.
+
 ## Form patterns
 
 Schemas in `src/lib/zodSchema.ts` — export both schema and `type X = z.infer<typeof xSchema>`.
