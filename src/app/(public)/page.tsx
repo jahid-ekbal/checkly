@@ -1,17 +1,16 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import Footer from "@/components/Landing/Footer";
+import { buttonVariants } from "@/components/shadcnui/button";
+import { getSession } from "@/lib/auth/session";
+import { brand } from "@/lib/brand";
 import {
   ArrowRightIcon,
   FingerprintIcon,
   Settings2Icon,
-  UsersIcon,
   ShieldCheckIcon,
+  UsersIcon,
 } from "lucide-react";
-import LandingHeader from "@/components/Landing/Header";
-import Footer from "@/components/Landing/Footer";
-import { Button } from "@/components/shadcnui/button";
-import { brand } from "@/lib/brand";
-import { getSession } from "@/lib/auth/session";
+import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: `${brand.name} - ${brand.tagline}`,
@@ -30,12 +29,10 @@ const LandingPage = async () => {
 
   return (
     <>
-      <LandingHeader />
-
       <main>
         <section className="relative overflow-hidden">
           <div className="bg-primary/15 pointer-events-none absolute -top-40 left-1/2 size-[36rem] -translate-x-1/2 rounded-full blur-3xl" />
-          <div className="mx-auto flex min-h-dvh max-w-7xl flex-col items-center justify-center px-4 py-24 text-center sm:px-6">
+          <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-7xl flex-col items-center justify-center px-4 py-24 text-center sm:px-6">
             <div className="space-y-6">
               <span className="bg-muted/60 text-muted-foreground inline-flex items-center gap-2 rounded-full border border-dashed px-4 py-1.5 text-sm">
                 <ShieldCheckIcon className="text-primary size-4" />
@@ -49,28 +46,34 @@ const LandingPage = async () => {
               </p>
               <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
                 {session ?
-                  <Button
-                    size="lg"
-                    className="w-full sm:w-auto"
-                    render={<Link href="/dashboard" />}>
+                  <Link
+                    href="/dashboard"
+                    className={buttonVariants({
+                      size: "lg",
+                      className: "w-full sm:w-auto",
+                    })}>
                     Go to dashboard
                     <ArrowRightIcon />
-                  </Button>
+                  </Link>
                 : <>
-                    <Button
-                      size="lg"
-                      className="w-full sm:w-auto"
-                      render={<Link href="/sign-up" />}>
+                    <Link
+                      href="/sign-up"
+                      className={buttonVariants({
+                        size: "lg",
+                        className: "w-full sm:w-auto",
+                      })}>
                       Get started
                       <ArrowRightIcon />
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full sm:w-auto"
-                      render={<Link href="/sign-in" />}>
+                    </Link>
+                    <Link
+                      href="/sign-in"
+                      className={buttonVariants({
+                        variant: "outline",
+                        size: "lg",
+                        className: "w-full sm:w-auto",
+                      })}>
                       Sign in
-                    </Button>
+                    </Link>
                   </>
                 }
               </div>

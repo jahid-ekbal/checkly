@@ -1,16 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { UserCircle2Icon, LogOutIcon } from "lucide-react";
-import { authClient } from "@/lib/auth/auth-client";
-import { Button } from "@/components/shadcnui/button";
+import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/shadcnui/avatar";
-import { SidebarTrigger } from "@/components/shadcnui/sidebar";
-import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
+import { Button } from "@/components/shadcnui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,8 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/shadcnui/dropdown-menu";
+import { SidebarTrigger } from "@/components/shadcnui/sidebar";
+import { authClient } from "@/lib/auth/auth-client";
+import { LogOutIcon, UserCircle2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-type HeaderProps = {
+type PrivateHeaderProps = {
   user: {
     name: string;
     email: string;
@@ -31,7 +31,7 @@ type HeaderProps = {
   workspaceName: string;
 };
 
-const Header = ({ user, workspaceName }: HeaderProps) => {
+const PrivateHeader = ({ user, workspaceName }: PrivateHeaderProps) => {
   const router = useRouter();
 
   const signOut = async () => {
@@ -103,4 +103,4 @@ const Header = ({ user, workspaceName }: HeaderProps) => {
   );
 };
 
-export default Header;
+export default PrivateHeader;

@@ -14,7 +14,7 @@
     "studio": "prisma studio --browser none"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
+    "@base-ui/react": "^1.7.0",
     "@better-auth/prisma-adapter": "^1.6.26",
     "@hookform/resolvers": "^5.7.1",
     "@prisma/adapter-libsql": "^7.9.0",

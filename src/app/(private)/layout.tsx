@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation";
+import AppSidebar from "@/components/app/AppSidebar";
+import PrivateHeader from "@/components/private/Header";
+import { SidebarInset, SidebarProvider } from "@/components/shadcnui/sidebar";
 import { requireUser } from "@/lib/auth/session";
 import prisma from "@/lib/dbClient/prisma";
-import Header from "@/components/app/Header";
-import AppSidebar from "@/components/app/AppSidebar";
-import { SidebarInset, SidebarProvider } from "@/components/shadcnui/sidebar";
+import { redirect } from "next/navigation";
 
 const AppLayout = async ({ children }: { children: React.ReactNode }) => {
   const session = await requireUser();
@@ -29,7 +29,7 @@ const AppLayout = async ({ children }: { children: React.ReactNode }) => {
     <SidebarProvider>
       <AppSidebar user={currentUser} />
       <SidebarInset className="min-h-dvh">
-        <Header
+        <PrivateHeader
           user={currentUser}
           workspaceName={workspace.name}
         />

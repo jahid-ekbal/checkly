@@ -1,9 +1,9 @@
+import prisma from "@/lib/dbClient/prisma";
+import { serverEnv } from "@/lib/env/serverEnv";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
-import prisma from "@/lib/dbClient/prisma";
-import { serverEnv } from "@/lib/env/serverEnv";
 import { ac, roles } from "./permissions";
 
 export const auth = betterAuth({
@@ -24,7 +24,7 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    disableSignUp: false,
+    autoSignIn: false,
   },
   plugins: [
     admin({
