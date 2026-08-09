@@ -10,7 +10,7 @@
     "lint": "next typegen && tsc --noEmit && eslint",
     "prod": "prisma generate && next build && next start",
     "migrate": "prisma migrate dev && prisma generate",
-    "db:seed": "bun prisma/seed.ts",
+    "seed": "bun prisma/seed.ts",
     "studio": "prisma studio --browser none"
   },
   "dependencies": {
