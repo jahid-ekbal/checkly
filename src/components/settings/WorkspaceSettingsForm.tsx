@@ -7,7 +7,7 @@ import {
   updateWorkspaceSchema,
   type UpdateWorkspaceInput,
 } from "@/lib/zodSchema";
-import { updateWorkspaceAction } from "@/server/actions/workspace-actions";
+import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/shadcnui/button";
 import { Input } from "@/components/shadcnui/input";
 import { Textarea } from "@/components/shadcnui/textarea";
@@ -37,12 +37,15 @@ const WorkspaceSettingsForm = ({ workspace }: WorkspaceSettingsFormProps) => {
   const onSubmit = async (values: UpdateWorkspaceInput) => {
     setError(null);
     setSuccess(false);
-    const result = await updateWorkspaceAction(values);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      await apiFetch("/api/workspace", {
+        method: "PATCH",
+        body: JSON.stringify(values),
+      });
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     }
-    setSuccess(true);
   };
 
   return (

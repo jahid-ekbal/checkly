@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircleIcon } from "lucide-react";
-import { signUpSchema } from "@/lib/zodSchema";
+import { signUpSchema, type SignUpInput } from "@/lib/zodSchema";
 import { authClient } from "@/lib/auth/auth-client";
 import { Button } from "@/components/shadcnui/button";
 import { Input } from "@/components/shadcnui/input";
@@ -20,11 +20,10 @@ const SignUpForm = () => {
     handleSubmit,
     control,
     formState: { isSubmitting },
-  } = useForm({
+  } = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       name: "",
-      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -32,17 +31,10 @@ const SignUpForm = () => {
     mode: "all",
   });
 
-  const onSubmit = async (values: {
-    name: string;
-    username: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-  }) => {
+  const onSubmit = async (values: SignUpInput) => {
     setError(null);
     const { error } = await authClient.signUp.email({
       name: values.name,
-      username: values.username,
       email: values.email,
       password: values.password,
     });
@@ -71,24 +63,6 @@ const SignUpForm = () => {
               type="text"
               placeholder="Jane Doe"
               autoComplete="name"
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
-        name="username"
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Username</FieldLabel>
-            <Input
-              {...field}
-              id={field.name}
-              type="text"
-              placeholder="jane_doe"
-              autoComplete="username"
               aria-invalid={fieldState.invalid}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

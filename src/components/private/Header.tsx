@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
 import {
   Avatar,
@@ -17,28 +18,32 @@ import {
 } from "@/components/shadcnui/dropdown-menu";
 import { SidebarTrigger } from "@/components/shadcnui/sidebar";
 import { authClient } from "@/lib/auth/auth-client";
+import { apiFetch } from "@/lib/api";
 import { LogOutIcon, UserCircle2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-type PrivateHeaderProps = {
-  user: {
-    name: string;
-    email: string;
-    username: string | null;
-    image: string | null;
-    role: string;
-  };
-  workspaceName: string;
-};
-
-const PrivateHeader = ({ user, workspaceName }: PrivateHeaderProps) => {
+const PrivateHeader = () => {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const [workspaceName, setWorkspaceName] = useState("Checkly");
+
+  useEffect(() => {
+    void apiFetch<{ workspace: { name: string } }>("/api/me")
+      .then((data) => setWorkspaceName(data.workspace.name))
+      .catch(() => {
+        // keep default name
+      });
+  }, []);
 
   const signOut = async () => {
     await authClient.signOut();
     router.push("/sign-in");
     router.refresh();
   };
+
+  if (!session) return null;
+
+  const user = session.user;
 
   const initials = user.name
     .split(" ")
@@ -74,7 +79,7 @@ const PrivateHeader = ({ user, workspaceName }: PrivateHeaderProps) => {
                 <div className="flex flex-col">
                   <span>{user.name}</span>
                   <span className="text-muted-foreground text-xs">
-                    {user.username ? `@${user.username}` : user.email}
+                    {user.email}
                   </span>
                 </div>
               </DropdownMenuLabel>

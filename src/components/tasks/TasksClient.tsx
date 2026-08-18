@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, useOptimistic, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useOptimistic,
+  useTransition,
+} from "react";
 import { PlusIcon, TagsIcon } from "lucide-react";
 import { Button } from "@/components/shadcnui/button";
 import { Checkbox } from "@/components/shadcnui/checkbox";
@@ -11,41 +16,52 @@ import {
   AvatarImage,
 } from "@/components/shadcnui/avatar";
 import { toast } from "@/components/shadcnui/toast";
-import {
-  toggleTaskDoneAction,
-  deleteTaskAction,
-} from "@/server/actions/task-actions";
+import { apiFetch } from "@/lib/api";
+import { authClient } from "@/lib/auth/auth-client";
 import TaskFormDialog from "./TaskFormDialog";
 import TaskDetailDrawer from "./TaskDetailDrawer";
 import LabelDialog from "./LabelDialog";
 import { priorityMeta } from "./priority";
 import type { TaskItem, Member, Label } from "./types";
 
-type TasksClientProps = {
+type TasksData = {
   tasks: TaskItem[];
   labels: Label[];
   members: Member[];
-  canEdit: boolean;
-  canManageLabels: boolean;
-  currentUserId: string;
 };
 
-const TasksClient = ({
-  tasks,
-  labels,
-  members,
-  canEdit,
-  canManageLabels,
-}: TasksClientProps) => {
-  const router = useRouter();
+const TasksClient = () => {
+  const [data, setData] = useState<TasksData | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [, startTransition] = useTransition();
 
+  const { data: session } = authClient.useSession();
+  const canManageLabels = session?.user.role === "admin";
+
+  const load = useCallback(async () => {
+    try {
+      const result = await apiFetch<TasksData>("/api/tasks");
+      setData(result);
+    } catch {
+      toast.add({
+        title: "Could not load tasks",
+        description: "Something went wrong.",
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      await load();
+    };
+    void fetchTasks();
+  }, [load]);
+
   const [optimisticTasks, setOptimisticDone] = useOptimistic(
-    tasks,
+    data?.tasks ?? [],
     (state, { id, done }: { id: string; done: boolean }) =>
       state.map((task) => (task.id === id ? { ...task, done } : task)),
   );
@@ -55,20 +71,28 @@ const TasksClient = ({
     startTransition(() => {
       setOptimisticDone({ id: task.id, done: next });
     });
-    void toggleTaskDoneAction(task.id, next).then((result) => {
-      if (result.error) router.refresh();
+    void apiFetch(`/api/tasks/${task.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ done: next }),
+    }).catch(() => {
+      void load();
     });
   };
 
   const handleDelete = async (taskId: string) => {
     setSelectedTask(null);
-    const result = await deleteTaskAction(taskId);
-    if (result.error) {
-      toast.add({ title: "Delete failed", description: result.error });
+    try {
+      await apiFetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+    } catch (err) {
+      toast.add({
+        title: "Delete failed",
+        description:
+          err instanceof Error ? err.message : "Something went wrong",
+      });
       return;
     }
     toast.add({ title: "Task deleted", description: "The task was removed." });
-    router.refresh();
+    void load();
   };
 
   const editFormTask =
@@ -85,6 +109,16 @@ const TasksClient = ({
         image: editingTask.image,
       }
     : null;
+
+  if (!data) {
+    return (
+      <div className="text-muted-foreground rounded-lg border p-12 text-center">
+        <p className="text-foreground font-medium">Loading tasks...</p>
+      </div>
+    );
+  }
+
+  const { labels, members } = data;
 
   return (
     <div className="space-y-6">
@@ -105,12 +139,10 @@ const TasksClient = ({
               Labels
             </Button>
           )}
-          {canEdit && (
-            <Button onClick={() => setCreateOpen(true)}>
-              <PlusIcon />
-              New task
-            </Button>
-          )}
+          <Button onClick={() => setCreateOpen(true)}>
+            <PlusIcon />
+            New task
+          </Button>
         </div>
       </div>
 
@@ -196,9 +228,7 @@ const TasksClient = ({
                           .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {task.assignee.username ?
-                      `@${task.assignee.username}`
-                    : task.assignee.name}
+                    {task.assignee.name}
                   </span>
                 )}
               </div>
@@ -212,6 +242,7 @@ const TasksClient = ({
         onOpenChange={setCreateOpen}
         members={members}
         labels={labels}
+        onSaved={() => void load()}
       />
 
       <TaskFormDialog
@@ -222,6 +253,7 @@ const TasksClient = ({
         task={editFormTask}
         members={members}
         labels={labels}
+        onSaved={() => void load()}
       />
 
       <TaskDetailDrawer
@@ -239,15 +271,15 @@ const TasksClient = ({
         onDelete={() => {
           if (selectedTask) void handleDelete(selectedTask.id);
         }}
-        canEdit={canEdit}
-        canDelete={canEdit}
+        canEdit
+        canDelete
       />
 
       <LabelDialog
         open={labelsOpen}
         onOpenChange={setLabelsOpen}
         labels={labels}
-        onChanged={() => router.refresh()}
+        onChanged={() => void load()}
       />
     </div>
   );

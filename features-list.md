@@ -10,7 +10,7 @@ A full-stack task management web application for small teams.
 
 ### 1.1 Authentication (BetterAuth — Email/Password Only)
 
-- [x] **Sign up**: public self-registration (email + password + username)
+- [x] **Sign up**: public self-registration (email + password)
 - [x] **Sign in**: email + password with "remember me"
 - [ ] **Password reset**: secure token via email _(transactional — required for auth; deferred — needs SMTP)_
 - [x] **Session management**: database sessions via BetterAuth; `src/proxy.ts` protects routes (Next 16 has no middleware)
@@ -21,24 +21,22 @@ A full-stack task management web application for small teams.
 - [x] **One workspace per deployment** — no switching, no additional workspace creation
 - [x] Auto-provisioned on first signup or database-seeded
 - [x] All users belong implicitly to this workspace
-- [x] **Workspace settings**: name, description (Owner/Admin only)
+- [x] **Workspace settings**: name, description (Admin only)
 
 ### 1.3 Roles & Permissions
 
-| Role       | Permissions                                                           |
-| ---------- | --------------------------------------------------------------------- |
-| **Owner**  | Full control, manage members, delete workspace data                   |
-| **Admin**  | Manage members (change roles, remove), edit settings, create projects |
-| **Member** | Create/edit tasks, view reports                                       |
-| **Viewer** | Read-only across all projects and tasks                               |
+| Role      | Permissions                                                                       |
+| --------- | --------------------------------------------------------------------------------- |
+| **Admin** | Full control: manage members (change roles, remove), edit settings, manage labels |
+| **User**  | Create/edit tasks, view workspace                                                 |
 
 - [ ] **Project-level restrictions** (optional): limit specific projects to certain members
-- [x] **Server Action enforcement**: every mutation checks `userId` + `role`
+- [x] **API route enforcement**: every mutation checks the session + `role`
 
 ### 1.4 User Onboarding _(Self-Signup + Admin-Created)_
 
-- [x] Public self-registration (sign up page with name, username, email, password)
-- [x] **Owner/Admin creates accounts** via admin form: name, username, email, temporary password, role
+- [x] Public self-registration (sign up page with name, email, password)
+- [x] **Admin creates accounts** via admin form: name, email, temporary password, role
 - [x] New user signs in with provided credentials
 - [ ] **No invite flow or welcome emails** — credentials shared directly by the admin
 
@@ -128,7 +126,7 @@ A full-stack task management web application for small teams.
 
 - [ ] **Command palette** (`Cmd+K`): search tasks, create task, switch view
 - [ ] **Keyboard shortcuts**: `C` create, `D` done (toggle completion), `Esc` close, `/` focus search
-- [x] **Optimistic UI**: `useOptimistic` with Server Actions for instant feedback on checkboxes
+- [x] **Optimistic UI**: `useOptimistic` with API calls for instant feedback on checkboxes
 - [x] **Responsive**: sidebar collapses to sheet on mobile
 
 ### 6.2 Theming
@@ -143,14 +141,14 @@ A full-stack task management web application for small teams.
 
 ### 7.1 User Settings
 
-- [x] Profile: name, username, avatar, banner, bio, email, password change
-- [x] **Inline editing**: double-click text to edit (name, username, email, bio); edit icon overlay on avatar/banner to change or remove images
+- [x] Profile: name, avatar, banner, bio, email, password change
+- [x] **Inline editing**: double-click text to edit (name, email, bio); edit icon overlay on avatar/banner to change or remove images
 - [x] **No notification preferences**
 - [ ] Default landing view
 
-### 7.2 Workspace Administration (Owner/Admin)
+### 7.2 Workspace Administration (Admin)
 
-- [ ] **Member management**: view all users, change roles, remove from workspace
+- [x] **Member management**: view all users, change roles, remove from workspace
 - [x] **Label management**: create/delete workspace labels (color-coded)
 - [ ] **Archiving**: soft-delete projects or tasks (recoverable)
 - [ ] **Audit log**: role changes, removals, project deletions

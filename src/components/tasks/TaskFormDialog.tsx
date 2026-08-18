@@ -6,10 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
 import { LoaderCircleIcon } from "lucide-react";
 import { createTaskSchema, type CreateTaskInput } from "@/lib/zodSchema";
-import {
-  createTaskAction,
-  updateTaskAction,
-} from "@/server/actions/task-actions";
+import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/shadcnui/button";
 import { Input } from "@/components/shadcnui/input";
 import { Textarea } from "@/components/shadcnui/textarea";
@@ -34,7 +31,7 @@ import ImageUploadField from "@/components/uploads/ImageUploadField";
 import { toast } from "@/components/shadcnui/toast";
 import { priorityOptions } from "./priority";
 
-type Member = { id: string; name: string; username: string | null };
+type Member = { id: string; name: string };
 type Label = { id: string; name: string; color: string };
 
 type TaskFormDialogProps = {
@@ -53,6 +50,7 @@ type TaskFormDialogProps = {
   } | null;
   members: Member[];
   labels: Label[];
+  onSaved?: () => void;
 };
 
 const toDateTimeLocal = (iso: string | null) => {
@@ -68,6 +66,7 @@ const TaskFormDialog = ({
   task,
   members,
   labels,
+  onSaved,
 }: TaskFormDialogProps) => {
   const [error, setError] = useState<string | null>(null);
 
@@ -97,12 +96,20 @@ const TaskFormDialog = ({
 
   const onSubmit = async (values: CreateTaskInput) => {
     setError(null);
-    const result =
-      task ?
-        await updateTaskAction(task.id, values)
-      : await createTaskAction(values);
-    if (result.error) {
-      setError(result.error);
+    try {
+      if (task) {
+        await apiFetch(`/api/tasks/${task.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(values),
+        });
+      } else {
+        await apiFetch("/api/tasks", {
+          method: "POST",
+          body: JSON.stringify(values),
+        });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
       return;
     }
     toast.add({
@@ -111,6 +118,7 @@ const TaskFormDialog = ({
     });
     reset();
     onOpenChange(false);
+    onSaved?.();
   };
 
   return (
@@ -219,9 +227,7 @@ const TaskFormDialog = ({
                         <SelectItem
                           key={member.id}
                           value={member.id}>
-                          {member.username ?
-                            `@${member.username}`
-                          : member.name}
+                          {member.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

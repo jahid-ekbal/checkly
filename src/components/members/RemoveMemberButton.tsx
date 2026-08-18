@@ -1,21 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { removeUserAction } from "@/server/actions/admin-actions";
+import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/shadcnui/button";
 
 type RemoveMemberButtonProps = {
   userId: string;
   disabled: boolean;
+  onChanged: () => void;
 };
 
-const RemoveMemberButton = ({ userId, disabled }: RemoveMemberButtonProps) => {
+const RemoveMemberButton = ({
+  userId,
+  disabled,
+  onChanged,
+}: RemoveMemberButtonProps) => {
   const [pending, setPending] = useState(false);
 
   const onRemove = async () => {
     if (!window.confirm("Remove this member?")) return;
     setPending(true);
-    await removeUserAction(userId);
+    try {
+      await apiFetch(`/api/members/${userId}`, { method: "DELETE" });
+      onChanged();
+    } catch {
+      // keep member list
+    }
     setPending(false);
   };
 

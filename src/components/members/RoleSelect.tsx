@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { setRoleAction } from "@/server/actions/admin-actions";
+import { apiFetch } from "@/lib/api";
 import type { Role } from "@/lib/auth/permissions";
 import {
   Select,
@@ -15,14 +15,23 @@ type RoleSelectProps = {
   userId: string;
   role: string;
   disabled: boolean;
+  onChanged: () => void;
 };
 
-const RoleSelect = ({ userId, role, disabled }: RoleSelectProps) => {
+const RoleSelect = ({ userId, role, disabled, onChanged }: RoleSelectProps) => {
   const [pending, setPending] = useState(false);
 
   const onChange = async (value: string) => {
     setPending(true);
-    await setRoleAction(userId, value as Role);
+    try {
+      await apiFetch(`/api/members/${userId}/role`, {
+        method: "PATCH",
+        body: JSON.stringify({ role: value as Role }),
+      });
+      onChanged();
+    } catch {
+      // keep current role
+    }
     setPending(false);
   };
 
@@ -40,8 +49,7 @@ const RoleSelect = ({ userId, role, disabled }: RoleSelectProps) => {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="admin">Admin</SelectItem>
-        <SelectItem value="member">Member</SelectItem>
-        <SelectItem value="viewer">Viewer</SelectItem>
+        <SelectItem value="user">User</SelectItem>
       </SelectContent>
     </Select>
   );

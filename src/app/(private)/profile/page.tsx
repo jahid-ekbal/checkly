@@ -1,3 +1,6 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarDaysIcon, MailIcon, ShieldCheckIcon } from "lucide-react";
 import {
@@ -6,39 +9,78 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/shadcnui/card";
-import { requireUser } from "@/lib/auth/session";
-import prisma from "@/lib/dbClient/prisma";
 import InlineEditableText from "@/components/profile/InlineEditableText";
 import ProfileImageEditor from "@/components/profile/ProfileImageEditor";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
-import {
-  updateNameAction,
-  updateUsernameAction,
-  updateEmailAction,
-  updateBioAction,
-} from "@/server/actions/profile-actions";
 import { priorityMeta } from "@/components/tasks/priority";
+import { apiFetch } from "@/lib/api";
 
-const ProfilePage = async () => {
-  const session = await requireUser();
+type ProfileData = {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+    banner: string | null;
+    bio: string | null;
+    role: string;
+    createdAt: string;
+  };
+  workspace: { name: string };
+  myTasks: {
+    id: string;
+    title: string;
+    priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+    dueDate: string | null;
+  }[];
+};
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
+const ProfilePage = () => {
+  const [data, setData] = useState<ProfileData | null>(null);
 
-  if (!user) return null;
+  const load = useCallback(async () => {
+    try {
+      const result = await apiFetch<ProfileData>("/api/me");
+      setData(result);
+    } catch {
+      // leave data null
+    }
+  }, []);
 
-  const myTasks = await prisma.task.findMany({
-    where: { assigneeId: user.id, done: false },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-    select: { id: true, title: true, priority: true, dueDate: true },
-  });
+  useEffect(() => {
+    const fetchProfile = async () => {
+      await load();
+    };
+    void fetchProfile();
+  }, [load]);
+
+  const saveField = async (field: "name" | "email" | "bio", value: string) => {
+    try {
+      await apiFetch("/api/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ [field]: value }),
+      });
+      await load();
+      return null;
+    } catch (err) {
+      return err instanceof Error ? err.message : "Something went wrong";
+    }
+  };
+
+  if (!data) {
+    return (
+      <div className="text-muted-foreground rounded-lg border p-12 text-center">
+        <p className="text-foreground font-medium">Loading profile...</p>
+      </div>
+    );
+  }
+
+  const { user, myTasks } = data;
 
   const details = [
     {
       label: "Role",
-      value: user.role ?? "member",
+      value: user.role,
       icon: ShieldCheckIcon,
     },
     {
@@ -81,18 +123,10 @@ const ProfilePage = async () => {
             <div className="min-w-0 flex-1 pb-1">
               <InlineEditableText
                 value={user.name}
-                onSave={updateNameAction}
+                onSave={(value) => saveField("name", value)}
                 label="name"
                 validate="name"
                 displayClassName="font-heading text-xl font-semibold"
-              />
-              <InlineEditableText
-                value={user.username ? `@${user.username}` : ""}
-                onSave={updateUsernameAction}
-                label="username"
-                validate="username"
-                placeholder="@username"
-                displayClassName="text-muted-foreground text-sm"
               />
             </div>
           </div>
@@ -100,7 +134,7 @@ const ProfilePage = async () => {
           <div className="mt-4 space-y-3">
             <InlineEditableText
               value={user.bio ?? ""}
-              onSave={updateBioAction}
+              onSave={(value) => saveField("bio", value)}
               label="bio"
               multiline
               validate="bio"
@@ -111,7 +145,7 @@ const ProfilePage = async () => {
               <MailIcon className="text-muted-foreground size-4 shrink-0" />
               <InlineEditableText
                 value={user.email}
-                onSave={updateEmailAction}
+                onSave={(value) => saveField("email", value)}
                 label="email"
                 validate="email"
                 displayClassName="text-muted-foreground"

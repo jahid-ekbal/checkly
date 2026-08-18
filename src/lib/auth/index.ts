@@ -13,15 +13,7 @@ export const auth = betterAuth({
   trustedOrigins: serverEnv.BETTER_AUTH_ALLOWED_ORIGINS?.split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
-  user: {
-    additionalFields: {
-      username: {
-        type: "string",
-        unique: true,
-        required: false,
-      },
-    },
-  },
+  user: {},
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
@@ -30,7 +22,7 @@ export const auth = betterAuth({
     admin({
       ac,
       roles,
-      defaultRole: "member",
+      defaultRole: "user",
     }),
     nextCookies(),
   ],

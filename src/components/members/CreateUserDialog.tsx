@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserSchema, type CreateUserInput } from "@/lib/zodSchema";
-import { createUserAction } from "@/server/actions/admin-actions";
+import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/shadcnui/button";
 import { Input } from "@/components/shadcnui/input";
 import { Field, FieldError, FieldLabel } from "@/components/shadcnui/field";
@@ -25,7 +25,11 @@ import {
   SelectValue,
 } from "@/components/shadcnui/select";
 
-const CreateUserDialog = () => {
+type CreateUserDialogProps = {
+  onChanged: () => void;
+};
+
+const CreateUserDialog = ({ onChanged }: CreateUserDialogProps) => {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,23 +42,27 @@ const CreateUserDialog = () => {
     resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: "",
-      username: "",
       email: "",
       password: "",
-      role: "member",
+      role: "user",
     },
     mode: "all",
   });
 
   const onSubmit = async (values: CreateUserInput) => {
     setError(null);
-    const result = await createUserAction(values);
-    if (result.error) {
-      setError(result.error);
+    try {
+      await apiFetch("/api/members", {
+        method: "POST",
+        body: JSON.stringify(values),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
       return;
     }
     reset();
     setOpen(false);
+    onChanged();
   };
 
   return (
@@ -79,24 +87,6 @@ const CreateUserDialog = () => {
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  autoComplete="off"
-                  aria-invalid={fieldState.invalid}
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-          <Controller
-            name="username"
-            control={control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Username</FieldLabel>
                 <Input
                   {...field}
                   id={field.name}
@@ -165,8 +155,7 @@ const CreateUserDialog = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="viewer">Viewer</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>

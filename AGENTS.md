@@ -18,7 +18,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | Base UI React | ^1.6               | Primitive provider for shadcn components (e.g., `@base-ui/react/button`)                                                                                             |
 | Tailwind CSS  | ^4.3               | `@tailwindcss/postcss` plugin, `tw-animate-css`, `shadcn/tailwind.css`                                                                                               |
 | Zod           | ^4.4               | Schema validation                                                                                                                                                    |
-| env           | @t3-oss/env-nextjs | Split: `src/lib/env/serverEnv.ts` + `clientEnv.ts`                                                                                                                   |
+| env           | @t3-oss/env-nextjs | Server-only: `src/lib/env/serverEnv.ts` (clientEnv.ts was removed — do not recreate)                                                                                 |
 
 Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
 
@@ -39,18 +39,20 @@ Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
 ```
 src/
   app/              # App Router (layout.tsx, page.tsx, globals.css)
+    api/            # Route handlers — ALL data access lives here (no server actions)
   components/
     Layout/         # Header, ThemeToggleButton
     Providers/      # ThemeProvider (next-themes)
     shadcnui/       # shadcn primitives (button.tsx, toast.tsx)
-  hooks/            # Custom hooks (currently empty)
+  hooks/            # Custom hooks (useImageUpload)
   lib/
+    api.ts          # apiFetch<T>() helper for client → API calls
+    auth/           # Better Auth: index, auth-client, permissions, session
     dbClient/       # Prisma singleton with libSQL adapter
-    env/            # serverEnv.ts, clientEnv.ts (t3-env)
+    env/            # serverEnv.ts (t3-env)
     fonts.ts        # next/font (Geist, Inter)
     types.ts        # LayoutProps
     utils.ts        # cn() helper (clsx + tailwind-merge)
-  server/           # API routes placeholder (empty)
 generated/prisma/   # Prisma client output (gitignored)
 public/uploads/     # User uploads (all files ignored except .gitkeep)
 ```
@@ -66,10 +68,12 @@ public/uploads/     # User uploads (all files ignored except .gitkeep)
 
 ## Auth (Better Auth) gotchas
 
-- **Next 16**: no `middleware.ts` — use `src/proxy.ts` (`proxy` export). Cookie-only check there; full session check in pages/actions via `auth.api.getSession`.
+- **Next 16**: no `middleware.ts` — use `src/proxy.ts` (`proxy` export). Cookie-only check there; full session check in route handlers via `getSession` from `src/lib/auth/session.ts` (`auth.api.getSession`).
+- **No server actions, no server components with data access**: all pages under `src/app/` are client components; data flows through route handlers in `src/app/api/*` (401/403 semantics: `getSession()` → 401, role check `session.user.role !== "admin"` → 403). Clients call them via `apiFetch` from `src/lib/api.ts`.
 - **Prisma 7**: import client from `@generated/prisma/client` (custom output), adapter `prismaAdapter(prisma, { provider: "sqlite" })` from `@better-auth/prisma-adapter`. Auth instance: `src/lib/auth/index.ts`, client: `src/lib/auth/auth-client.ts`, roles/AC: `src/lib/auth/permissions.ts`.
 - Schema regeneration: `bun x auth@latest generate --adapter prisma --dialect sqlite -y` (overwrites `schema.prisma`; re-add custom models after). Migrations via `prisma migrate dev` (CLI migrate unsupported for Prisma).
-- Roles: 4 custom AC roles (owner/admin/member/viewer) in `permissions.ts`. Public email/password signup enabled (`disableSignUp: false`), new users get default role `member` (admin plugin). Admins can still create users via `auth.api.createUser`. Owner seeded via `bun run db:seed` (needs `OWNER_EMAIL/PASSWORD/NAME` env).
+- Roles: exactly 2 AC roles — `admin` and `user` — in `permissions.ts`. Public email/password signup enabled (`disableSignUp: false`), new users get default role `user` (admin plugin). Admins create users via `auth.api.createUser`. Seeded admin via `bun run db:seed` (needs `OWNER_EMAIL/PASSWORD/NAME` env).
+- **No `username` field anywhere** — user model, zod schemas, forms, and UI use name + email only.
 - Base UI `Select` `onValueChange` passes `string | null` — guard with `if (value)` before RHF `field.onChange`.
 
 ## Form patterns

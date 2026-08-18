@@ -1,16 +1,13 @@
 import Footer from "@/components/Landing/Footer";
-import { buttonVariants } from "@/components/shadcnui/button";
-import { getSession } from "@/lib/auth/session";
+import LandingHero from "@/components/Landing/LandingHero";
 import { brand } from "@/lib/brand";
 import {
-  ArrowRightIcon,
   FingerprintIcon,
   Settings2Icon,
   ShieldCheckIcon,
   UsersIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: `${brand.name} - ${brand.tagline}`,
@@ -24,9 +21,7 @@ const featureIcons = [
   FingerprintIcon,
 ];
 
-const LandingPage = async () => {
-  const session = await getSession();
-
+const LandingPage = () => {
   return (
     <>
       <main>
@@ -44,39 +39,7 @@ const LandingPage = async () => {
               <p className="text-muted-foreground mx-auto max-w-2xl text-lg text-pretty">
                 {brand.hero.subheadline}
               </p>
-              <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
-                {session ?
-                  <Link
-                    href="/dashboard"
-                    className={buttonVariants({
-                      size: "lg",
-                      className: "w-full sm:w-auto",
-                    })}>
-                    Go to dashboard
-                    <ArrowRightIcon />
-                  </Link>
-                : <>
-                    <Link
-                      href="/sign-up"
-                      className={buttonVariants({
-                        size: "lg",
-                        className: "w-full sm:w-auto",
-                      })}>
-                      Get started
-                      <ArrowRightIcon />
-                    </Link>
-                    <Link
-                      href="/sign-in"
-                      className={buttonVariants({
-                        variant: "outline",
-                        size: "lg",
-                        className: "w-full sm:w-auto",
-                      })}>
-                      Sign in
-                    </Link>
-                  </>
-                }
-              </div>
+              <LandingHero />
             </div>
           </div>
         </section>

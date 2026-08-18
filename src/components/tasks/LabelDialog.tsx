@@ -6,10 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
 import { LoaderCircleIcon, Trash2Icon } from "lucide-react";
 import { labelSchema, type LabelInput } from "@/lib/zodSchema";
-import {
-  createLabelAction,
-  deleteLabelAction,
-} from "@/server/actions/label-actions";
+import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/shadcnui/button";
 import { Input } from "@/components/shadcnui/input";
 import { Field, FieldError, FieldLabel } from "@/components/shadcnui/field";
@@ -54,9 +51,13 @@ const LabelDialog = ({
 
   const onSubmit = async (values: LabelInput) => {
     setError(null);
-    const result = await createLabelAction(values);
-    if (result.error) {
-      setError(result.error);
+    try {
+      await apiFetch("/api/labels", {
+        method: "POST",
+        body: JSON.stringify(values),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
       return;
     }
     reset();
@@ -64,9 +65,11 @@ const LabelDialog = ({
   };
 
   const handleDelete = async (labelId: string) => {
-    const result = await deleteLabelAction(labelId);
-    if (result.error) {
-      setError(result.error);
+    setError(null);
+    try {
+      await apiFetch(`/api/labels/${labelId}`, { method: "DELETE" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
       return;
     }
     onChanged();

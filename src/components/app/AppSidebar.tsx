@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboardIcon,
   ListChecksIcon,
@@ -31,21 +31,11 @@ import {
   SidebarTrigger,
 } from "@/components/shadcnui/sidebar";
 import Logo from "@/components/Brand/Logo";
-import { useRouter } from "next/navigation";
 
-type AppSidebarProps = {
-  user: {
-    name: string;
-    email: string;
-    username: string | null;
-    image: string | null;
-    role: string;
-  };
-};
-
-const AppSidebar = ({ user }: AppSidebarProps) => {
+const AppSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = authClient.useSession();
 
   const signOut = async () => {
     await authClient.signOut();
@@ -53,7 +43,10 @@ const AppSidebar = ({ user }: AppSidebarProps) => {
     router.refresh();
   };
 
-  const canManage = user.role === "owner" || user.role === "admin";
+  if (!session) return null;
+
+  const user = session.user;
+  const canManage = user.role === "admin";
 
   const navItems = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
@@ -135,7 +128,7 @@ const AppSidebar = ({ user }: AppSidebarProps) => {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{user.name}</p>
               <p className="text-muted-foreground truncate text-xs">
-                {user.username ? `@${user.username}` : user.email}
+                {user.email}
               </p>
             </div>
           </Link>

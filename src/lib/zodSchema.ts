@@ -1,13 +1,5 @@
 import { z } from "zod";
 
-export const usernameSchema = z
-  .string()
-  .trim()
-  .regex(
-    /^[a-z0-9_]{3,20}$/,
-    "3-20 characters: lowercase letters, digits, underscores",
-  );
-
 export const passwordPolicy = z
   .string()
   .min(8, "Password must be at least 8 characters")
@@ -26,7 +18,6 @@ export type SignInInput = z.infer<typeof signInSchema>;
 export const signUpSchema = z
   .object({
     name: z.string().trim().min(2, "Name must be at least 2 characters"),
-    username: usernameSchema,
     email: z.email("Enter a valid email"),
     password: passwordPolicy,
     confirmPassword: z.string(),
@@ -39,10 +30,9 @@ export type SignUpInput = z.infer<typeof signUpSchema>;
 
 export const createUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  username: usernameSchema,
   email: z.email("Enter a valid email"),
   password: passwordPolicy,
-  role: z.enum(["admin", "member", "viewer"]),
+  role: z.enum(["admin", "user"]),
 });
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 
@@ -55,9 +45,10 @@ export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>;
 export const updateProfileSchema = z
   .object({
     name: z.string().trim().min(2, "Name must be at least 2 characters"),
-    username: usernameSchema,
     email: z.email("Enter a valid email"),
     bio: z.string().max(200, "Bio must be 200 characters or fewer"),
+    image: z.string().nullable().optional(),
+    banner: z.string().nullable().optional(),
   })
   .partial()
   .refine((data) => Object.keys(data).length > 0, {
@@ -96,7 +87,9 @@ export const createTaskSchema = z.object({
 });
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
-export const updateTaskSchema = createTaskSchema.partial();
+export const updateTaskSchema = createTaskSchema
+  .partial()
+  .extend({ done: z.boolean().optional() });
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 
 export const labelSchema = z.object({

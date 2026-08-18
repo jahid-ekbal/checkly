@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ImageIcon, LoaderCircleIcon, PencilIcon, XIcon } from "lucide-react";
 import useImageUpload from "@/hooks/useImageUpload";
-import { updateProfileImageAction } from "@/server/actions/profile-actions";
+import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/shadcnui/toast";
 import { cn } from "@/lib/utils";
 
@@ -25,39 +25,34 @@ const ProfileImageEditor = ({
   const [value, setValue] = useState<string | null>(initial);
   const [saving, setSaving] = useState(false);
 
-  const { openPicker, busy, error } = useImageUpload({
-    kind: field === "image" ? "avatar" : "banner",
-    onChange: async (url) => {
-      if (!url) return;
-      setSaving(true);
-      const result = await updateProfileImageAction(field, url);
-      setSaving(false);
-      if (result.error) {
-        toast.add({ title: "Upload failed", description: result.error });
-        return;
-      }
+  const saveImage = async (url: string | null) => {
+    setSaving(true);
+    try {
+      await apiFetch("/api/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ [field]: url }),
+      });
       setValue(url);
       toast.add({
-        title: "Image updated",
-        description: "Your image was saved.",
+        title: url ? "Image updated" : "Image removed",
+        description: url ? "Your image was saved." : "Your image was removed.",
       });
+    } catch (err) {
+      toast.add({
+        title: "Update failed",
+        description:
+          err instanceof Error ? err.message : "Something went wrong",
+      });
+    }
+    setSaving(false);
+  };
+
+  const { openPicker, busy, error } = useImageUpload({
+    kind: field === "image" ? "avatar" : "banner",
+    onChange: (url) => {
+      if (url) void saveImage(url);
     },
   });
-
-  const remove = async () => {
-    setSaving(true);
-    const result = await updateProfileImageAction(field, null);
-    setSaving(false);
-    if (result.error) {
-      toast.add({ title: "Update failed", description: result.error });
-      return;
-    }
-    setValue(null);
-    toast.add({
-      title: "Image removed",
-      description: "Your image was removed.",
-    });
-  };
 
   const overlayBusy = busy || saving;
 
@@ -98,7 +93,7 @@ const ProfileImageEditor = ({
         <button
           type="button"
           aria-label="Remove image"
-          onClick={() => void remove()}
+          onClick={() => void saveImage(null)}
           disabled={overlayBusy}
           className="bg-background/80 hover:bg-destructive hover:text-destructive-foreground absolute top-2 right-2 grid size-8 place-items-center rounded-full border shadow-sm transition-colors">
           <XIcon className="size-4" />

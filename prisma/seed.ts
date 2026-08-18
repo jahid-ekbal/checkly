@@ -40,7 +40,7 @@ const main = async () => {
       name,
       email,
       emailVerified: true,
-      role: "owner",
+      role: "admin",
       workspaceId: WORKSPACE_ID,
     },
   });

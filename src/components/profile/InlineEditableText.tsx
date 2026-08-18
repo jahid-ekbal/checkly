@@ -12,7 +12,7 @@ type InlineEditableTextProps = {
   label: string;
   multiline?: boolean;
   placeholder?: string;
-  validate?: "name" | "username" | "email" | "bio";
+  validate?: "name" | "email" | "bio";
   className?: string;
   displayClassName?: string;
 };
@@ -23,10 +23,6 @@ const validators: Record<
 > = {
   name: (value) =>
     value.length >= 2 ? null : "Name must be at least 2 characters",
-  username: (value) =>
-    /^[a-z0-9_]{3,20}$/.test(value) ? null : (
-      "3-20 characters: lowercase letters, digits, underscores"
-    ),
   email: (value) =>
     /^\S+@\S+\.\S+$/.test(value) ? null : "Enter a valid email",
   bio: (value) =>

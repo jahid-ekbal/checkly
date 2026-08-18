@@ -90,9 +90,7 @@ const TaskDetailDrawer = ({
             {task.assignee && (
               <span className="inline-flex items-center gap-1.5">
                 <UserIcon className="size-4" />
-                {task.assignee.username ?
-                  `@${task.assignee.username}`
-                : task.assignee.name}
+                {task.assignee.name}
               </span>
             )}
             {task.dueDate && (

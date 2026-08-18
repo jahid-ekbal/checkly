@@ -1,11 +1,13 @@
+"use client";
+
 import Logo from "@/components/Brand/Logo";
 import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
 import { buttonVariants } from "@/components/shadcnui/button";
-import { getSession } from "@/lib/auth/session";
+import { authClient } from "@/lib/auth/auth-client";
 import Link from "next/link";
 
-const PublicHeader = async () => {
-  const session = await getSession();
+const PublicHeader = () => {
+  const { data: session } = authClient.useSession();
 
   return (
     <header className="bg-background/70 fixed top-0 right-0 left-0 z-50 border-b border-white/10 backdrop-blur-xl backdrop-saturate-150">

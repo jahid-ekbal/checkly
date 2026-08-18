@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircleIcon,
@@ -11,77 +14,96 @@ import {
   Settings2Icon,
   UserCircle2Icon,
 } from "lucide-react";
-import { requireUser } from "@/lib/auth/session";
-import prisma from "@/lib/dbClient/prisma";
+import { apiFetch } from "@/lib/api";
+import { authClient } from "@/lib/auth/auth-client";
 
-const DashboardPage = async () => {
-  const session = await requireUser();
+type DashboardData = {
+  stats: {
+    workspaceName: string;
+    role: string;
+    memberCount: number;
+    memberSince: string;
+  };
+  taskStats: {
+    open: number;
+    completedWeek: number;
+    overdue: number;
+  };
+};
 
-  const now = new Date();
-  const startOfWeek = new Date(now);
-  startOfWeek.setHours(0, 0, 0, 0);
-  startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+const DashboardPage = () => {
+  const { data: session } = authClient.useSession();
+  const [data, setData] = useState<DashboardData | null>(null);
 
-  const [user, memberCount, workspace, openTasks, completedThisWeek, overdue] =
-    await Promise.all([
-      prisma.user.findUnique({ where: { id: session.user.id } }),
-      prisma.user.count(),
-      prisma.workspace.findFirst(),
-      prisma.task.count({ where: { done: false } }),
-      prisma.task.count({
-        where: { done: true, completedAt: { gte: startOfWeek } },
-      }),
-      prisma.task.count({
-        where: { done: false, dueDate: { lt: now } },
-      }),
-    ]);
+  useEffect(() => {
+    void apiFetch<DashboardData>("/api/dashboard")
+      .then(setData)
+      .catch(() => {
+        // leave data null
+      });
+  }, []);
 
-  const name = user?.name ?? session.user.name;
+  if (!data || !session) {
+    return (
+      <div className="text-muted-foreground rounded-lg border p-12 text-center">
+        <p className="text-foreground font-medium">Loading dashboard...</p>
+      </div>
+    );
+  }
 
-  const stats = [
+  const { stats, taskStats } = data;
+  const isAdmin = session.user.role === "admin";
+
+  const statCards = [
     {
       label: "Workspace",
-      value: workspace?.name ?? "—",
+      value: stats.workspaceName,
       icon: Building2Icon,
     },
     {
       label: "Your role",
-      value: user?.role ?? "member",
+      value: stats.role,
       icon: ShieldCheckIcon,
     },
     {
       label: "Members",
-      value: String(memberCount),
+      value: String(stats.memberCount),
       icon: UsersIcon,
     },
     {
       label: "Member since",
-      value: new Date(
-        user?.createdAt ?? session.user.createdAt,
-      ).toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+      value: new Date(stats.memberSince).toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      }),
       icon: CalendarDaysIcon,
     },
   ];
 
-  const taskStats = [
+  const taskCards = [
     {
       label: "Open tasks",
-      value: String(openTasks),
+      value: String(taskStats.open),
       icon: ListChecksIcon,
     },
     {
       label: "Completed this week",
-      value: String(completedThisWeek),
+      value: String(taskStats.completedWeek),
       icon: CheckCircle2Icon,
     },
     {
       label: "Overdue",
-      value: String(overdue),
+      value: String(taskStats.overdue),
       icon: AlertCircleIcon,
     },
   ];
 
-  const links = [
+  const links: {
+    title: string;
+    description: string;
+    href: "/tasks" | "/profile" | "/members" | "/settings";
+    icon: typeof ListChecksIcon;
+  }[] = [
     {
       title: "Tasks",
       description: "Create, assign, and complete tasks.",
@@ -94,25 +116,29 @@ const DashboardPage = async () => {
       href: "/profile",
       icon: UserCircle2Icon,
     },
-    {
-      title: "Members",
-      description: "Create accounts and manage roles.",
-      href: "/members",
-      icon: UsersIcon,
-    },
-    {
-      title: "Settings",
-      description: "Manage workspace name and description.",
-      href: "/settings",
-      icon: Settings2Icon,
-    },
-  ] as const;
+    ...(isAdmin ?
+      [
+        {
+          title: "Members",
+          description: "Create accounts and manage roles.",
+          href: "/members" as const,
+          icon: UsersIcon,
+        },
+        {
+          title: "Settings",
+          description: "Manage workspace name and description.",
+          href: "/settings" as const,
+          icon: Settings2Icon,
+        },
+      ]
+    : []),
+  ];
 
   return (
     <section className="space-y-8">
       <div className="space-y-1">
         <h1 className="font-heading text-3xl font-semibold">
-          Welcome back, {name.split(" ")[0]}
+          Welcome back, {session.user.name.split(" ")[0]}
         </h1>
         <p className="text-muted-foreground">
           Here&apos;s what&apos;s happening in your workspace.
@@ -120,7 +146,7 @@ const DashboardPage = async () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
@@ -141,7 +167,7 @@ const DashboardPage = async () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {taskStats.map((stat) => {
+        {taskCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div

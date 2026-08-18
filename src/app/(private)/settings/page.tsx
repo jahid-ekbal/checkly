@@ -1,13 +1,40 @@
-import { requireRole } from "@/lib/auth/session";
-import prisma from "@/lib/dbClient/prisma";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import WorkspaceSettingsForm from "@/components/settings/WorkspaceSettingsForm";
+import { apiFetch } from "@/lib/api";
+import { authClient } from "@/lib/auth/auth-client";
 
-const SettingsPage = async () => {
-  await requireRole(["owner", "admin"]);
+const SettingsPage = () => {
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const [workspace, setWorkspace] = useState<{
+    name: string;
+    description: string;
+  } | null>(null);
 
-  const workspace = await prisma.workspace.findFirst();
+  useEffect(() => {
+    if (session && session.user.role !== "admin") {
+      router.replace("/dashboard");
+      return;
+    }
+    void apiFetch<{ workspace: { name: string; description: string } }>(
+      "/api/workspace",
+    )
+      .then((data) => setWorkspace(data.workspace))
+      .catch(() => {
+        // leave workspace null
+      });
+  }, [session, router]);
 
-  if (!workspace) return null;
+  if (!session || session.user.role !== "admin") {
+    return (
+      <div className="text-muted-foreground rounded-lg border p-12 text-center">
+        <p className="text-foreground font-medium">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <section className="space-y-6">
@@ -17,9 +44,7 @@ const SettingsPage = async () => {
           Manage workspace name and description.
         </p>
       </div>
-      <WorkspaceSettingsForm
-        workspace={{ name: workspace.name, description: workspace.description }}
-      />
+      {workspace && <WorkspaceSettingsForm workspace={workspace} />}
     </section>
   );
 };

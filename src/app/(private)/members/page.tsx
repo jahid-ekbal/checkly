@@ -1,5 +1,7 @@
-import { requireRole } from "@/lib/auth/session";
-import prisma from "@/lib/dbClient/prisma";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import CreateUserDialog from "@/components/members/CreateUserDialog";
 import RoleSelect from "@/components/members/RoleSelect";
 import RemoveMemberButton from "@/components/members/RemoveMemberButton";
@@ -11,15 +13,48 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/shadcnui/table";
+import { apiFetch } from "@/lib/api";
+import { authClient } from "@/lib/auth/auth-client";
 
-const MembersPage = async () => {
-  const session = await requireRole(["owner", "admin"]);
-  const actor = session.user;
-  const actorRole = actor.role ?? "member";
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 
-  const members = await prisma.user.findMany({
-    orderBy: { createdAt: "asc" },
-  });
+const MembersPage = () => {
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const [members, setMembers] = useState<Member[] | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const result = await apiFetch<{ members: Member[] }>("/api/members");
+      setMembers(result.members);
+    } catch {
+      setMembers([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session && session.user.role !== "admin") {
+      router.replace("/dashboard");
+      return;
+    }
+    const fetchMembers = async () => {
+      await load();
+    };
+    void fetchMembers();
+  }, [session, router, load]);
+
+  if (!session || session.user.role !== "admin") {
+    return (
+      <div className="text-muted-foreground rounded-lg border p-12 text-center">
+        <p className="text-foreground font-medium">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <section className="space-y-6">
@@ -30,7 +65,7 @@ const MembersPage = async () => {
             Create accounts and manage roles.
           </p>
         </div>
-        <CreateUserDialog />
+        <CreateUserDialog onChanged={() => void load()} />
       </div>
 
       <Table>
@@ -43,9 +78,8 @@ const MembersPage = async () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {members.map((member) => {
-            const memberRole = member.role ?? "member";
-            const canManage = memberRole === "owner" && actorRole !== "owner";
+          {(members ?? []).map((member) => {
+            const isSelf = session.user.id === member.id;
             return (
               <TableRow key={member.id}>
                 <TableCell className="font-medium">{member.name}</TableCell>
@@ -53,14 +87,16 @@ const MembersPage = async () => {
                 <TableCell>
                   <RoleSelect
                     userId={member.id}
-                    role={memberRole}
-                    disabled={canManage || actor.id === member.id}
+                    role={member.role}
+                    disabled={isSelf}
+                    onChanged={() => void load()}
                   />
                 </TableCell>
                 <TableCell className="text-right">
                   <RemoveMemberButton
                     userId={member.id}
-                    disabled={canManage || actor.id === member.id}
+                    disabled={isSelf}
+                    onChanged={() => void load()}
                   />
                 </TableCell>
               </TableRow>

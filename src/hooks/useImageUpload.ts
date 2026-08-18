@@ -6,7 +6,7 @@ import {
   FileSizeValidator,
   FileTypeValidator,
 } from "use-file-picker/validators";
-import { uploadImageAction } from "@/server/actions/upload-actions";
+import { apiFetch } from "@/lib/api";
 
 type UseImageUploadOptions = {
   kind: "avatar" | "banner" | "task";
@@ -28,16 +28,19 @@ const useImageUpload = ({ kind, onChange }: UseImageUploadOptions) => {
     onFilesSuccessfullySelected: async ({ filesContent }) => {
       setError(null);
       setUploading(true);
-      const result = await uploadImageAction({
-        data: filesContent[0].content,
-        kind,
-      });
-      setUploading(false);
-      if (result.error) {
-        setError(result.error);
-        return;
+      try {
+        const result = await apiFetch<{ url: string }>("/api/upload", {
+          method: "POST",
+          body: JSON.stringify({
+            data: filesContent[0].content,
+            kind,
+          }),
+        });
+        onChange(result.url);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload failed");
       }
-      onChange(result.url ?? null);
+      setUploading(false);
     },
     onFilesRejected: () => {
       setError("Only JPG, PNG, or WebP images up to 5MB are allowed");

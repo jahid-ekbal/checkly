@@ -10,7 +10,6 @@ export type TaskItem = {
   assignee: {
     id: string;
     name: string;
-    username: string | null;
     image: string | null;
   } | null;
   labels: { id: string; name: string; color: string }[];
@@ -23,5 +22,5 @@ export type TaskItem = {
   }[];
 };
 
-export type Member = { id: string; name: string; username: string | null };
+export type Member = { id: string; name: string };
 export type Label = { id: string; name: string; color: string };
