@@ -17,6 +17,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/shadcnui/dropdown-menu";
 import { SidebarTrigger } from "@/components/shadcnui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/shadcnui/tooltip";
 import { authClient } from "@/lib/auth/auth-client";
 import { apiFetch } from "@/lib/api";
 import { LogOutIcon, UserCircle2Icon } from "lucide-react";
@@ -56,7 +61,10 @@ const PrivateHeader = () => {
     <header className="border-b">
       <div className="flex h-14 items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-3">
-          <SidebarTrigger className="lg:hidden" />
+          <Tooltip>
+            <TooltipTrigger render={<SidebarTrigger className="lg:hidden" />} />
+            <TooltipContent>Toggle sidebar</TooltipContent>
+          </Tooltip>
           <span className="font-heading font-semibold">{workspaceName}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -83,12 +91,6 @@ const PrivateHeader = () => {
                   </span>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="pointer-events-none">
-                <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium capitalize">
-                  {user.role}
-                </span>
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => router.push("/profile")}>
                 <UserCircle2Icon />

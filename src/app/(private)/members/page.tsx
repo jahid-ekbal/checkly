@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import CreateUserDialog from "@/components/members/CreateUserDialog";
-import RoleSelect from "@/components/members/RoleSelect";
+import PunishmentControls from "@/components/members/PunishmentControls";
 import RemoveMemberButton from "@/components/members/RemoveMemberButton";
 import {
   Table,
@@ -20,7 +19,9 @@ type Member = {
   id: string;
   name: string;
   email: string;
-  role: string;
+  banned: boolean;
+  banReason: string | null;
+  banExpires: string | null;
 };
 
 const MembersPage = () => {
@@ -58,14 +59,11 @@ const MembersPage = () => {
 
   return (
     <section className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Members</h1>
-          <p className="text-muted-foreground text-sm">
-            Create accounts and manage roles.
-          </p>
-        </div>
-        <CreateUserDialog onChanged={() => void load()} />
+      <div>
+        <h1 className="text-2xl font-semibold">Members</h1>
+        <p className="text-muted-foreground text-sm">
+          Manage members, timeouts, and bans.
+        </p>
       </div>
 
       <Table>
@@ -73,7 +71,7 @@ const MembersPage = () => {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -85,19 +83,32 @@ const MembersPage = () => {
                 <TableCell className="font-medium">{member.name}</TableCell>
                 <TableCell>{member.email}</TableCell>
                 <TableCell>
-                  <RoleSelect
-                    userId={member.id}
-                    role={member.role}
-                    disabled={isSelf}
-                    onChanged={() => void load()}
-                  />
+                  {member.banned ?
+                    <span
+                      className="bg-destructive/10 text-destructive inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                      title={member.banReason ?? undefined}>
+                      {member.banExpires ?
+                        `Banned until ${new Date(member.banExpires).toLocaleDateString()}`
+                      : "Permanently banned"}
+                    </span>
+                  : <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
+                      Active
+                    </span>
+                  }
                 </TableCell>
                 <TableCell className="text-right">
-                  <RemoveMemberButton
-                    userId={member.id}
-                    disabled={isSelf}
-                    onChanged={() => void load()}
-                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <PunishmentControls
+                      member={member}
+                      disabled={isSelf}
+                      onChanged={() => void load()}
+                    />
+                    <RemoveMemberButton
+                      userId={member.id}
+                      disabled={isSelf}
+                      onChanged={() => void load()}
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             );

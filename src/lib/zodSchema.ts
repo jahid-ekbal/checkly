@@ -28,14 +28,6 @@ export const signUpSchema = z
   });
 export type SignUpInput = z.infer<typeof signUpSchema>;
 
-export const createUserSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.email("Enter a valid email"),
-  password: passwordPolicy,
-  role: z.enum(["admin", "user"]),
-});
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-
 export const updateWorkspaceSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().max(500, "Description too long"),

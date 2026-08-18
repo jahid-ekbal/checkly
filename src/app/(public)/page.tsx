@@ -53,8 +53,8 @@ const LandingPage = () => {
                 Everything you need to run your workspace
               </h2>
               <p className="text-muted-foreground">
-                From member management to role-based access, Checkly has your
-                team covered.
+                From task tracking to member management, Checkly has your team
+                covered.
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

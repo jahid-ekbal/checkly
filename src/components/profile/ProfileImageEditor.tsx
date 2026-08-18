@@ -5,6 +5,11 @@ import { ImageIcon, LoaderCircleIcon, PencilIcon, XIcon } from "lucide-react";
 import useImageUpload from "@/hooks/useImageUpload";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/shadcnui/toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/shadcnui/tooltip";
 import { cn } from "@/lib/utils";
 
 type ProfileImageEditorProps = {
@@ -80,24 +85,38 @@ const ProfileImageEditor = ({
         </div>
       )}
 
-      <button
-        type="button"
-        aria-label="Change image"
-        onClick={() => void openPicker()}
-        disabled={overlayBusy}
-        className="bg-background/80 hover:bg-background text-foreground absolute right-2 bottom-2 grid size-8 place-items-center rounded-full border shadow-sm transition-colors">
-        <PencilIcon className="size-4" />
-      </button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <button
+              type="button"
+              aria-label="Change image"
+              onClick={() => void openPicker()}
+              disabled={overlayBusy}
+              className="bg-background/80 hover:bg-background text-foreground absolute right-2 bottom-2 grid size-8 place-items-center rounded-full border shadow-sm transition-colors"
+            />
+          }>
+          <PencilIcon className="size-4" />
+        </TooltipTrigger>
+        <TooltipContent>Change image</TooltipContent>
+      </Tooltip>
 
       {value && (
-        <button
-          type="button"
-          aria-label="Remove image"
-          onClick={() => void saveImage(null)}
-          disabled={overlayBusy}
-          className="bg-background/80 hover:bg-destructive hover:text-destructive-foreground absolute top-2 right-2 grid size-8 place-items-center rounded-full border shadow-sm transition-colors">
-          <XIcon className="size-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                aria-label="Remove image"
+                onClick={() => void saveImage(null)}
+                disabled={overlayBusy}
+                className="bg-background/80 hover:bg-destructive hover:text-destructive-foreground absolute top-2 right-2 grid size-8 place-items-center rounded-full border shadow-sm transition-colors"
+              />
+            }>
+            <XIcon className="size-4" />
+          </TooltipTrigger>
+          <TooltipContent>Remove image</TooltipContent>
+        </Tooltip>
       )}
 
       {error && (

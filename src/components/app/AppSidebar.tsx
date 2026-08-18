@@ -30,6 +30,11 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/shadcnui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/shadcnui/tooltip";
 import Logo from "@/components/Brand/Logo";
 
 const AppSidebar = () => {
@@ -82,7 +87,10 @@ const AppSidebar = () => {
               textClassName="text-lg"
             />
           </Link>
-          <SidebarTrigger className="lg:hidden" />
+          <Tooltip>
+            <TooltipTrigger render={<SidebarTrigger className="lg:hidden" />} />
+            <TooltipContent>Toggle sidebar</TooltipContent>
+          </Tooltip>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -132,13 +140,20 @@ const AppSidebar = () => {
               </p>
             </div>
           </Link>
-          <button
-            type="button"
-            onClick={() => void signOut()}
-            className="text-muted-foreground hover:text-destructive rounded-md p-1.5 transition-colors"
-            aria-label="Sign out">
-            <LogOutIcon className="size-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  onClick={() => void signOut()}
+                  className="text-muted-foreground hover:text-destructive rounded-md p-1.5 transition-colors"
+                  aria-label="Sign out"
+                />
+              }>
+              <LogOutIcon className="size-4" />
+            </TooltipTrigger>
+            <TooltipContent>Sign out</TooltipContent>
+          </Tooltip>
         </div>
       </SidebarFooter>
     </Sidebar>

@@ -30,7 +30,6 @@ export const GET = async () => {
   return NextResponse.json({
     stats: {
       workspaceName: workspace?.name ?? "—",
-      role: user?.role ?? "user",
       memberCount,
       memberSince: (user?.createdAt ?? session.user.createdAt).toISOString(),
     },

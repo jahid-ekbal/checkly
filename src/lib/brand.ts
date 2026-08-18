@@ -2,11 +2,11 @@ export const brand = {
   name: "Checkly",
   tagline: "Workspace operations, simplified.",
   description:
-    "Manage tasks, members, and roles from one clean workspace dashboard.",
+    "Manage tasks, members, and workspace settings from one clean dashboard.",
   hero: {
     headline: "Your workspace, under control.",
     subheadline:
-      "Checkly keeps your tasks, team, and roles in one secure place. Assign work, track progress, and stay on top of everything.",
+      "Checkly keeps your tasks and team in one secure place. Assign work, track progress, and stay on top of everything.",
   },
   features: [
     {
@@ -15,14 +15,14 @@ export const brand = {
         "Create, assign, and complete tasks with priorities, labels, due dates, and effort estimates.",
     },
     {
-      title: "Role-based access",
+      title: "Member safety",
       description:
-        "Owner, admin, member, and viewer roles with fine-grained permissions.",
+        "Admins can timeout or ban members and lift punishments anytime.",
     },
     {
       title: "Team management",
       description:
-        "Create accounts, assign roles, and remove members in a few clicks.",
+        "Manage your team, apply timeouts and bans, and remove members in a few clicks.",
     },
     {
       title: "Secure sessions",

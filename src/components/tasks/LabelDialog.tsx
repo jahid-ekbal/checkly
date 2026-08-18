@@ -17,6 +17,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/shadcnui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/shadcnui/tooltip";
 import type { Label } from "./types";
 
 type LabelDialogProps = {
@@ -150,13 +155,20 @@ const LabelDialog = ({
                   />
                   {label.name}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Delete label ${label.name}`}
-                  onClick={() => void handleDelete(label.id)}>
-                  <Trash2Icon className="size-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Delete label ${label.name}`}
+                        onClick={() => void handleDelete(label.id)}
+                      />
+                    }>
+                    <Trash2Icon className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>Delete label</TooltipContent>
+                </Tooltip>
               </li>
             ))}
           </ul>

@@ -9,7 +9,6 @@ import {
   CalendarDaysIcon,
   CheckCircle2Icon,
   ListChecksIcon,
-  ShieldCheckIcon,
   UsersIcon,
   Settings2Icon,
   UserCircle2Icon,
@@ -20,7 +19,6 @@ import { authClient } from "@/lib/auth/auth-client";
 type DashboardData = {
   stats: {
     workspaceName: string;
-    role: string;
     memberCount: number;
     memberSince: string;
   };
@@ -59,11 +57,6 @@ const DashboardPage = () => {
       label: "Workspace",
       value: stats.workspaceName,
       icon: Building2Icon,
-    },
-    {
-      label: "Your role",
-      value: stats.role,
-      icon: ShieldCheckIcon,
     },
     {
       label: "Members",
@@ -120,7 +113,7 @@ const DashboardPage = () => {
       [
         {
           title: "Members",
-          description: "Create accounts and manage roles.",
+          description: "Manage members, timeouts, and bans.",
           href: "/members" as const,
           icon: UsersIcon,
         },

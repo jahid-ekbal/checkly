@@ -27,7 +27,6 @@ export const GET = async () => {
       image: user?.image ?? null,
       banner: user?.banner ?? null,
       bio: user?.bio ?? null,
-      role: user?.role ?? "user",
       createdAt: (user?.createdAt ?? session.user.createdAt).toISOString(),
     },
     workspace: { name: workspace?.name ?? "Checkly" },

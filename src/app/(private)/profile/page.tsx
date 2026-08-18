@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDaysIcon, MailIcon, ShieldCheckIcon } from "lucide-react";
+import { CalendarDaysIcon, MailIcon } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -23,7 +23,6 @@ type ProfileData = {
     image: string | null;
     banner: string | null;
     bio: string | null;
-    role: string;
     createdAt: string;
   };
   workspace: { name: string };
@@ -78,11 +77,6 @@ const ProfilePage = () => {
   const { user, myTasks } = data;
 
   const details = [
-    {
-      label: "Role",
-      value: user.role,
-      icon: ShieldCheckIcon,
-    },
     {
       label: "Member since",
       value: new Date(user.createdAt).toLocaleDateString("en-US", {
